@@ -12,10 +12,41 @@ const githubApi = axios.create({
   }
 });
 
+// Simple in-memory cache
+const cache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+const getCacheKey = (url, params) => {
+  return `${url}${params ? JSON.stringify(params) : ''}`;
+};
+
+const getCachedData = (key) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedData = (key, data) => {
+  cache.set(key, {
+    data,
+    timestamp: Date.now()
+  });
+};
+
 // User profile information
 export const getUserProfile = async (user = username) => {
+  const cacheKey = getCacheKey(`/users/${user}`);
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    return cachedData;
+  }
+  
   try {
     const response = await githubApi.get(`/users/${user}`);
+    setCachedData(cacheKey, response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching user profile:', error);
@@ -25,16 +56,24 @@ export const getUserProfile = async (user = username) => {
 
 // User repositories
 export const getUserRepositories = async (user = username, options = {}) => {
+  const params = {
+    sort: options.sort || 'updated',
+    direction: options.direction || 'desc',
+    per_page: options.per_page || 30,
+    page: options.page || 1,
+    type: options.type || 'owner'
+  };
+  
+  const cacheKey = getCacheKey(`/users/${user}/repos`, params);
+  const cachedData = getCachedData(cacheKey);
+  
+  if (cachedData) {
+    return cachedData;
+  }
+  
   try {
-    const params = {
-      sort: options.sort || 'updated',
-      direction: options.direction || 'desc',
-      per_page: options.per_page || 30,
-      page: options.page || 1,
-      type: options.type || 'owner'
-    };
-
     const response = await githubApi.get(`/users/${user}/repos`, { params });
+    setCachedData(cacheKey, response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching repositories:', error);
