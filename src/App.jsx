@@ -39,7 +39,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router basename="/git-show-case-v2">
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         {profileLoading ? (
@@ -51,10 +51,10 @@ function App() {
         {/* Main Content */}
         <main>
           <Routes>
-            <Route path="/git-show-case-v2" element={<Home />} />
-            <Route path="/git-show-case-v2/projects" element={<Projects />} />
-            <Route path="/git-show-case-v2/project/:projectName" element={<ProjectDetail />} />
-            <Route path="/git-show-case-v2/activity" element={<Activity />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/project/:projectName" element={<ProjectDetail />} />
+            <Route path="/activity" element={<Activity />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
